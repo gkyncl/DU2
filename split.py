@@ -11,20 +11,13 @@ features =data["features"]
 
 # vypocitej strany obdelnika:
 xmid, ymid, xmax, xmin, ymax, ymin = quad_tree.split_lines(features)[0:6]
-len_x = abs(xmax - xmin)
-len_y = abs(ymax - ymin)
+len_x = abs(xmax - xmin)/2
+len_y = abs(ymax - ymin)/2
 
 
-a_list, kresleni = quad_tree.quad_tree(features, xmid, ymid, len_x, len_y)
-print("kresleni:", kresleni)
+a_list = quad_tree.quad_tree(features, xmid, ymid, len_x, len_y)
 
-# kresleni bodu
-a, b, c, d, e = quad_tree.split_lines(features)[2:7]
-quad_tree.drawing(e,a,b,c,d, kresleni)
 
-# kresleni deleni
-print(kresleni)
-#kresleni_zelva.cut_lines_draw(kresleni)
 
 # vytvoreni json vystupniho souboru
 gj_structure = {"type": "FeatureCollection"}
