@@ -1,4 +1,4 @@
-import turtle
+import turtle, statistics
 
 def split_lines(json_file):
     # vypocita linie rezu
@@ -18,36 +18,109 @@ def split_lines(json_file):
     Ymax = body[-1][1]
     Ymin = body[0][1]
 
-    #drawing(body, Xmax, Ymax)
+
+    #drawing(body, Xmax, Xmin, Ymax, Ymin)
 
     X_mid = (Xmax + Xmin) / 2
     Y_mid = (Ymax + Ymin) / 2
-    return(X_mid, Y_mid, Xmax, Xmin, Ymax, Ymin)
+    return(X_mid, Y_mid, Xmax, Xmin, Ymax, Ymin, body)
 
-def drawing(body_all, xmax, ymax):
+def drawing(body_all, xmax, xmin, ymax, ymin, body):
+    # vykresleni vstupnich bodu
+    r = []
+    l = []
     for pts in body_all:
-        turtle.Screen().setup(600 + 4, 400 + 8)  # fudge factors due to window borders & title bar
-        turtle.Screen().setworldcoordinates(0, 0, 400, 600)
+        r.append(pts[0])
+        l.append(pts[1])
+    # preskalovani souradnic pomoci z-skoru
+    mean_x = statistics.mean(r)
+    sd_x = statistics.stdev(r)
 
+    mean_y = statistics.mean(l)
+    sd_y = statistics.stdev(l)
+
+    for pt in body_all:
+        x = 200*((pt[0]-mean_x)/sd_x)
+        y = 200*((pt[1]-mean_y)/sd_y)
+        turtle.speed(50)
         turtle.penup()
-        turtle.goto(pts)
+        turtle.goto(x,y)
         turtle.pendown()
         turtle.dot(5, "blue")
+
+    first = []
+    second = []
+    #third = []
+    #fourth = []
+    for values in body:
+        # rozdeleni na 4 seznamy
+        first.append(values[0])
+        second.append(values[1])
+        #third.append(values[2])
+        #fourth.append(values[3])
+
+    # preskalovani souradnic pomoci z-skoru
+    mean_first = statistics.mean(first)
+    sd_first = statistics.stdev(first)
+
+    mean_second = statistics.mean(second)
+    sd_second = statistics.stdev(second)
+
+    #mean_third = statistics.mean(third)
+    #sd_third = statistics.stdev(third)
+
+    #mean_fourth = statistics.mean(fourth)
+    #sd_fourth = statistics.stdev(fourth)
+
+    for vals in body:
+        x1 = 200 * ((vals[0] - mean_first) / sd_first)
+        y1 = 200 * ((vals[1] - mean_second) / sd_second)
+
+        #x2 = 200 * ((vals[0] - mean_first) / sd_first)
+        #y2 = 200 * ((vals[3] - mean_fourth) / sd_fourth)
+
+        #x3 = 200 * ((vals[2] - mean_third) / sd_third)
+        #y3 = 200 * ((vals[2] - mean_third) / sd_third)
+
+        #x4 = 200 * ((vals[2] - mean_third) / sd_third)
+        #y4 = 200 * ((vals[3] - mean_fourth) / sd_fourth)
+
+        turtle.speed(50)
+        turtle.penup()
+        turtle.goto(x1, y1)
+        turtle.pendown()
+        turtle.dot(5, "red")
+        #turtle.penup()
+        #turtle.goto(x2, y2)
+        #turtle.pendown()
+        #turtle.dot(5, "red")
+        #turtle.penup()
+        #turtle.goto(x3, y3)
+        #turtle.pendown()
+        #turtle.dot(5, "red")
+        #turtle.penup()
+        #turtle.goto(x4, y4)
+        #turtle.pendown()
+        #turtle.dot(5, "red")
+
     turtle.exitonclick()
 
 
 
 
+
+
 final_list = [] # seznam pro zapis finalnich prvku
+points_kresleni = []
 a = [1,2] # seznam pro tvorbu id
 
 
-def quad_tree(json_list, kvadrant = 0, x_max = 0, x_min = 0, y_max = 0, y_min = 0):
+def quad_tree(json_list, xmid, ymid, len_x, len_y, kvadrant = 0):
     print("delka:", len(json_list))
+    # len -- delka strany boundig boxu
+    # mid -- delici hodnoty
 
-    if len(json_list) < 8:
-        #id = id + 1
-        #id = random.randint(0,200)
+    if len(json_list) < 5:
         a.sort(reverse=True)
         Id = a[-1]# vytazeni id z id_seznamu
         for i in json_list:
@@ -55,23 +128,34 @@ def quad_tree(json_list, kvadrant = 0, x_max = 0, x_min = 0, y_max = 0, y_min = 
             final_list.append(i)
         a.pop() # vymazani last prvku
         a.append(Id+2) # pridani prvku
+        #print("deleni:",x_max, x_min, y_max, y_min)
+
 
         return (json_list) # navrat
 
+    # vypocet linii rezu na zaklade kvadrantu
     if kvadrant ==0:
-        X_mid, Y_mid = split_lines(json_list)[0:2]
+        X_mid, Y_mid = xmid, ymid
+        #Xmax, Xmin, Ymax, Ymin = split_lines(json_list)[2:6] # kraje puvodniho bounding boxu
+        print("0")
     elif kvadrant ==1:
-        X_mid = (x_min + x_max)/2
-        Y_mid = (y_min + y_max)/2
+        xmid = xmid - len_x
+        ymid = ymid + len_y
+
+        print("1")
     elif kvadrant ==2:
-        X_mid = (x_min + x_max) / 2
-        Y_mid = (y_min + y_max) / 2
+        xmid = xmid + len_x
+        ymid = ymid + len_y
+        print("2")
     elif kvadrant ==3:
-        X_mid = (x_min + x_max) / 2
-        Y_mid = (y_min + y_max) / 2
+        xmid = xmid - len_x
+        ymid = ymid - len_y
+        print("3")
     elif kvadrant ==4:
-        X_mid = (x_min + x_max) / 2
-        Y_mid = (y_min + y_max) / 2
+        xmid = xmid + len_x
+        ymid = ymid - len_y
+        print("4")
+
 
 
     UL = [] # seznamy pro 4 kvadranty bodu (D = down, U = up, R = right, L = left)
@@ -85,11 +169,11 @@ def quad_tree(json_list, kvadrant = 0, x_max = 0, x_min = 0, y_max = 0, y_min = 
         x, y = souradnice
 
 
-        if x < X_mid and y > Y_mid:
+        if x < xmid and y > ymid:
             UL.append(pts)
-        elif x > X_mid and y > Y_mid:
+        elif x > xmid and y > ymid:
             UR.append(pts)
-        elif x < X_mid and y < Y_mid:
+        elif x < xmid and y < ymid:
             DL.append(pts)
         else:
             DR.append(pts)
@@ -99,16 +183,73 @@ def quad_tree(json_list, kvadrant = 0, x_max = 0, x_min = 0, y_max = 0, y_min = 
     print("DL:", DL)
     print("DR:", DR)
 
-    Xmax, Xmin, Ymax, Ymin = split_lines(json_list)[2:6]
+
 
     # rekurzivne volam na 4 vznikle kvadranty
-    quad_tree(UL, kvadrant=1, x_max=X_mid, x_min=Xmin, y_max=Ymax, y_min=Y_mid)
-    quad_tree(UR, kvadrant=2, x_max=Xmax, x_min=X_mid, y_max=Ymax, y_min=Y_mid)
-    quad_tree(DL, kvadrant=3, x_max=X_mid, x_min=Xmin, y_max=Y_mid, y_min=Ymin)
-    quad_tree(DR, kvadrant=4, x_max=Xmax, x_min=X_mid, y_max=Y_mid, y_min=Ymin)
+    quad_tree(UL,xmid, ymid,len_x/4, len_y/4, kvadrant=1)
+    quad_tree(UR,xmid, ymid,len_x/4, len_y/4, kvadrant=2, )
+    quad_tree(DL,xmid, ymid,len_x/4, len_y/4, kvadrant=3, )
+    quad_tree(DR,xmid, ymid,len_x/4, len_y/4,kvadrant=4, )
 
 
 
-    return (final_list)
+    return (final_list, points_kresleni)
 
 
+def cut_lines_draw(body):
+    first = []
+    second = []
+    third = []
+    fourth = []
+    for values in body:
+        # rozdeleni na 4 seznamy
+        first.append(values[0])
+        second.append(values[1])
+        third.append(values[2])
+        fourth.append(values[3])
+
+    # preskalovani souradnic pomoci z-skoru
+    mean_first = statistics.mean(first)
+    sd_first = statistics.stdev(first)
+
+    mean_second = statistics.mean(second)
+    sd_second = statistics.stdev(second)
+
+    mean_third = statistics.mean(third)
+    sd_third = statistics.stdev(third)
+
+    mean_fourth = statistics.mean(fourth)
+    sd_fourth = statistics.stdev(fourth)
+
+    for vals in body:
+        x1 = 200*((vals[0]-mean_first)/sd_first)
+        y1 = 200*((vals[2]-mean_third)/sd_third)
+
+        x2 = 200*((vals[0]-mean_first)/sd_first)
+        y2 = 200*((vals[3]-mean_fourth)/sd_fourth)
+
+        x3 = 200*((vals[2]-mean_third)/sd_third)
+        y3 = 200*((vals[2]-mean_third)/sd_third)
+
+        x4 = 200*((vals[2]-mean_third)/sd_third)
+        y4 = 200*((vals[3]-mean_fourth)/sd_fourth)
+
+        turtle.speed(50)
+        turtle.penup()
+        turtle.goto(x1, y1)
+        turtle.pendown()
+        turtle.dot(5, "blue")
+        turtle.penup()
+        turtle.goto(x2, y2)
+        turtle.pendown()
+        turtle.dot(5, "blue")
+        turtle.penup()
+        turtle.goto(x3, y3)
+        turtle.pendown()
+        turtle.dot(5, "blue")
+        turtle.penup()
+        turtle.goto(x4, y4)
+        turtle.pendown()
+        turtle.dot(5, "blue")
+
+        turtle.bye()

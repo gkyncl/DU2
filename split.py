@@ -1,4 +1,4 @@
-import math, json, quad_tree
+import math, json, quad_tree, kresleni_zelva
 
 # nacteni geoJSON souboru
 
@@ -7,15 +7,26 @@ with open("points_out2.json", "r", encoding="utf-8") as f:
 
 
 features =data["features"]
-#features = features[0:20]
-#UL, UR, DL, DR = quad_tree.quad_tree(features, 0)
 
-#quad_tree.split_lines(features)
 
-a_list = quad_tree.quad_tree(features)
+# vypocitej strany obdelnika:
+xmid, ymid, xmax, xmin, ymax, ymin = quad_tree.split_lines(features)[0:6]
+len_x = abs(xmax - xmin)
+len_y = abs(ymax - ymin)
 
-#points_all = UL + UR + DL + DR
 
+a_list, kresleni = quad_tree.quad_tree(features, xmid, ymid, len_x, len_y)
+print("kresleni:", kresleni)
+
+# kresleni bodu
+a, b, c, d, e = quad_tree.split_lines(features)[2:7]
+quad_tree.drawing(e,a,b,c,d, kresleni)
+
+# kresleni deleni
+print(kresleni)
+#kresleni_zelva.cut_lines_draw(kresleni)
+
+# vytvoreni json vystupniho souboru
 gj_structure = {"type": "FeatureCollection"}
 gj_structure["features"] = a_list
 
