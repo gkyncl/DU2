@@ -1,12 +1,11 @@
 import turtle, statistics
 
-def split_lines(json_file):
+def split_lines(feature_list):
     # vypocet linii rezu
     body = []  # list souradnic
-    for pnts in json_file:
-        souradnice = pnts["geometry"]["coordinates"]
-        x, y = souradnice
-        body.append((x, y))
+    for pnt in feature_list:
+        souradnice = pnt["geometry"]["coordinates"]
+        body.append(souradnice)
 
 
     body.sort(key=lambda p: p[0])  # serazeni podle x
@@ -22,71 +21,64 @@ def split_lines(json_file):
     return(x_mid, y_mid, xmax, xmin, ymax, ymin, body)
 
 
-
-
-final_list = [] # seznam pro zapis finalnich prvku
-a = [1,2] # seznam pro tvorbu id
-
-
-def quad_tree(json_list, xmid, ymid, len_x, len_y, kvadrant = 0):
-    # len -- delka odpovidajici pulce strany boundig boxu
-    # mid -- delici hodnoty
+def quad_tree(json_list, xmid, ymid, len_x, len_y, aid_maker, final_list, kvadrant = 0,):
+    # len -- delka odpovidajici pulce strany obdelniku, ktery funkce v danou chvili zpracovava
+    # mid -- delici hodnoty obdelniku o uroven vys
+    # aid_maker -- jednoprvkovy seznam k zapisu cluster_id
     # kvadrant -- defaultne roven 0, meni se az po prvnim rozdeleni
 
     if len(json_list) < 50:
-        a.sort(reverse=True)
-        id = a[-1]# vytazeni id z id_seznamu
-        # zapis id
+        aid = aid_maker[-1] # vytazeni id z id_seznamu
         for i in json_list:
-            i["properties"]["cluster_id"] = id
+            i["properties"]["cluster_id"] = aid
             final_list.append(i)
-        a.pop() # vymazani last prvku
-        a.append(id+2) # pridani prvku
+        aid_maker.pop() # vymazani posledniho (jedineho) prvku
+        aid_maker.append(aid+1) # pridani prvku o 1 vetsi nez byl puvodni prvek
 
-        return (json_list)
+        return (final_list, json_list, aid_maker)
 
     # vypocet linii rezu na zaklade kvadrantu
-    if kvadrant ==1:
+    if kvadrant == 1:
         xmid = xmid - len_x
         ymid = ymid + len_y
 
-    elif kvadrant ==2:
+    elif kvadrant == 2:
         xmid = xmid + len_x
         ymid = ymid + len_y
 
-    elif kvadrant ==3:
+    elif kvadrant == 3:
         xmid = xmid - len_x
         ymid = ymid - len_y
 
-    elif kvadrant ==4:
+    elif kvadrant == 4:
         xmid = xmid + len_x
         ymid = ymid - len_y
 
-    # seznamy pro 4 kvadranty bodu (D = down, U = up, R = right, L = left)
+    # seznamy pro 4 kvadranty bodu (L = lower, U = upper, R = right, L = left)
     UL = []
     UR = []
-    DL = []
-    DR = []
+    LL = []
+    LR = []
 
     # prochazim json_file a delim body do 4 kvadrantu -- vzniknou 4 dilci json soubory
-    for pts in json_list:
-        souradnice = pts["geometry"]["coordinates"]
+    for pt in json_list:
+        souradnice = pt["geometry"]["coordinates"]
         x, y = souradnice
 
         if x < xmid and y > ymid:
-            UL.append(pts)
+            UL.append(pt)
         elif x > xmid and y > ymid:
-            UR.append(pts)
+            UR.append(pt)
         elif x < xmid and y < ymid:
-            DL.append(pts)
+            LL.append(pt)
         else:
-            DR.append(pts)
+            LR.append(pt)
 
     # rekurzivne volam na 4 vznikle kvadranty
-    quad_tree(UL,xmid, ymid,len_x/2, len_y/2, kvadrant=1)
-    quad_tree(UR,xmid, ymid,len_x/2, len_y/2, kvadrant=2)
-    quad_tree(DL,xmid, ymid,len_x/2, len_y/2, kvadrant=3)
-    quad_tree(DR,xmid, ymid,len_x/2, len_y/2,kvadrant=4)
+    quad_tree(UL,xmid, ymid,len_x/2, len_y/2, aid_maker, final_list, kvadrant=1)
+    quad_tree(UR,xmid, ymid,len_x/2, len_y/2, aid_maker, final_list, kvadrant=2)
+    quad_tree(LL,xmid, ymid,len_x/2, len_y/2, aid_maker, final_list, kvadrant=3)
+    quad_tree(LR,xmid, ymid,len_x/2, len_y/2, aid_maker, final_list, kvadrant=4)
 
     return (final_list)
 
