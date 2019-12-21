@@ -22,6 +22,6 @@ gj_structure = {"type": "FeatureCollection"}
 gj_structure["features"] = a_list
 
 # zapis souboru
-with open("outputik.geojson", "w", encoding="utf-8") as f:
+with open("output.geojson", "w", encoding="utf-8") as f:
     json.dump(gj_structure, f, indent=2, ensure_ascii=False)
 
